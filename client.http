@@ -1,0 +1,11 @@
+@baseURL = http://localhost:3333
+
+# @name crate_account
+POST {{baseURL}}/accounts
+Content-Type: application/json
+
+{
+  "name": "Guilherme",
+  "email":"guilhermebuenoreis@gmail",
+  "password": "123456"
+}
