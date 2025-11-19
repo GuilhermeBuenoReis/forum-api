@@ -10,9 +10,43 @@ jobs:
   test:
     runs-on: ubuntu-22.04
 
+    env:
+      DATABASE_URL: postgresql://postgres:docker@localhost:5432/nest-clean?schema=public
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: docker
+          POSTGRES_DB: nest-clean
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Generate JWT key pair
+        run: |
+          openssl genrsa 2048 > private.pem
+          openssl rsa -in private.pem -pubout > public.pem
+          echo "JWT_PRIVATE_KEY=$(base64 -w0 private.pem)" >> "$GITHUB_ENV"
+          echo "JWT_PUBLIC_KEY=$(base64 -w0 public.pem)" >> "$GITHUB_ENV"
+
+      - name: Create environment file
+        run: |
+          cat <<EOF > .env
+          DATABASE_URL=${DATABASE_URL}
+          JWT_PUBLIC_KEY=${JWT_PUBLIC_KEY}
+          JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY}
+          JWT_SECRET=${JWT_SECRET}
+          EOF
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -27,6 +61,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm exec prisma generate
 
       - name: Run tests
         run: pnpm test
