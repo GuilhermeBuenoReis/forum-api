@@ -11,5 +11,6 @@
   },
   "cSpell.words": [
     "treeify"
-  ]
+  ],
+  "chatgpt.openOnStartup": false
 }

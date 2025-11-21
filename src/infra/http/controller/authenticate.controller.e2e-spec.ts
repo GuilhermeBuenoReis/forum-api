@@ -1,8 +1,10 @@
+import { randomUUID } from 'node:crypto';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { hash } from 'bcryptjs';
-import { AppModule } from 'src/infra/app.module';
+
 import request from 'supertest';
+import { AppModule } from '@/infra/app.module';
 import { PrismaService } from '@/infra/database/prisma/prisma.service';
 
 describe('Authenticate (E2E)', () => {
@@ -22,16 +24,18 @@ describe('Authenticate (E2E)', () => {
   });
 
   it(`/POST sessions`, async () => {
+    const email = `${randomUUID()}@example.com`;
+
     await prisma.user.create({
       data: {
         name: 'Jhon Doe',
-        email: 'jhondoe@gmail.com',
+        email,
         password: await hash('123456', 8),
       },
     });
 
     const response = await request(app.getHttpServer()).post('/sessions').send({
-      email: 'jhondoe@gmail.com',
+      email,
       password: '123456',
     });
     expect(response.statusCode).toBe(201);

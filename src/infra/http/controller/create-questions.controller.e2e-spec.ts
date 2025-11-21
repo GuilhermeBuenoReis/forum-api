@@ -1,8 +1,9 @@
+import { randomUUID } from 'node:crypto';
 import type { INestApplication } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
-import { AppModule } from 'src/infra/app.module';
 import request from 'supertest';
+import { AppModule } from '@/infra/app.module';
 import { PrismaService } from '@/infra/database/prisma/prisma.service';
 
 describe('Create question (E2E)', () => {
@@ -24,10 +25,12 @@ describe('Create question (E2E)', () => {
   });
 
   it(`/POST questions`, async () => {
+    const uniqueTitle = `New Question ${randomUUID()}`;
+
     const user = await prisma.user.create({
       data: {
         name: 'Jhon Doe',
-        email: 'jhondoe@gmail.com',
+        email: `${randomUUID()}@example.com`,
         password: '123456',
       },
     });
@@ -38,14 +41,14 @@ describe('Create question (E2E)', () => {
       .post('/questions')
       .set('Authorization', `Bearer ${accessToken}`)
       .send({
-        title: 'New Question',
+        title: uniqueTitle,
         content: 'Question Content',
       });
     expect(response.statusCode).toBe(201);
 
     const questionOnDatabase = await prisma.question.findFirst({
       where: {
-        title: 'New Question',
+        title: uniqueTitle,
       },
     });
     expect(questionOnDatabase).toBeTruthy();

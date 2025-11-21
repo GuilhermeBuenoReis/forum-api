@@ -8,6 +8,9 @@ export default defineConfig({
     globals: true,
     root: './',
     setupFiles: ['./test/setup-e2e.ts'],
+    maxConcurrency: 1,
+    minWorkers: 1,
+    maxWorkers: 1,
   },
   plugins: [
     swc.vite({
@@ -16,6 +19,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+      '@': resolve(__dirname, './src'),
       src: resolve(__dirname, './src'),
     },
   },

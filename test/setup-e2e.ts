@@ -1,9 +1,11 @@
 import 'dotenv/config';
+import 'tsconfig-paths/register';
 import { execSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+let prisma: PrismaClient | undefined;
 
 function generateUniqueDatabaseUrl(schemaId: string) {
   if (!process.env.DATABASE_URL) {
@@ -24,10 +26,18 @@ beforeAll(async () => {
 
   process.env.DATABASE_URL = databaseUrl;
 
-  execSync('pnpm prisma migrate deploy');
+  execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+
+  prisma = new PrismaClient({
+    adapter: new PrismaPg({ connectionString: databaseUrl }),
+  });
 });
 
 afterAll(async () => {
+  if (!prisma) {
+    return;
+  }
+
   await prisma.$executeRawUnsafe(`DROP SCHEMA IF EXISTS "${schemaId}" CASCADE`);
   await prisma.$disconnect();
 });
